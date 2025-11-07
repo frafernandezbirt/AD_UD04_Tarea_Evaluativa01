@@ -73,11 +73,6 @@ public class Conductor {
         v.setConductor(this);
     }
 
-    public void removeViaje(Viaje v) {
-        viajes.remove(v);
-        v.setConductor(null);
-    }
-
     @Override
     public String toString() {
         return "Conductor [id= " + idConductor + ", Nombre Conductor = " + nombreConductor + ", Vehiculo = " + vehiculo + "]";
