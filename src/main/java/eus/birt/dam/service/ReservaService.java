@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import eus.birt.dam.domain.Reserva;
+import eus.birt.dam.domain.Viaje;
 
 public class ReservaService {
 
@@ -23,5 +24,15 @@ public class ReservaService {
             tx.rollback();
             throw e;
         }
+    }
+
+    public void eliminarReserva(int id) {
+        Reserva reserva = session.get(Reserva.class, id);
+        if (reserva != null) {
+            session.remove(reserva); // No maneja transacción aquí
+        } else {
+            System.out.println("No se encontró la reserva con ID: " + id);
+        }
+
     }
 }

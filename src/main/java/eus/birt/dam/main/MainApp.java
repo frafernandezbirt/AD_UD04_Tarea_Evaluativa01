@@ -3,10 +3,12 @@ package eus.birt.dam.main;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -68,7 +70,7 @@ public class MainApp {
                         crearViaje(leerTeclado, session);
                         break;
                     case BUSCAR_VIAJES_DISPONIBLES:
-                        System.out.println("Buscando viajes disponibles");
+                        System.out.println("Apartado no realizado");
                         break;
                     case CREAR_PASAJERO:
                         System.out.println("Creando pasajero");
@@ -80,9 +82,11 @@ public class MainApp {
                         break;
                     case CANCELAR_RESERVA:
                         System.out.println("Cancelando Resrva");
+                        cancelarReserva(leerTeclado, session);
                         break;
                     case LISTAR_VIAJES:
                         System.out.println("Listando Viajes: ");
+                        listarViajes(leerTeclado, session);
                         break;
                     default:
                         System.out.println("Opcion incorrecta");
@@ -102,7 +106,6 @@ public class MainApp {
 
         System.out.println("Fin del programa");
     }
-
 
 
 	public static String elegirOpcion(Scanner teclado) {
@@ -251,4 +254,70 @@ public class MainApp {
         }
     }
 
+
+	private static void listarViajes(Scanner leerTeclado, Session session) {
+	    try {
+	        List<Viaje> viajes = session.createQuery("FROM Viaje", Viaje.class).getResultList();
+
+	        if (viajes.isEmpty()) {
+	            System.out.println("No hay viajes registrados.");
+	            return;
+	        }
+
+	        System.out.println("Lista de viajes disponibles:");
+	        for (Viaje viaje : viajes) {
+	            System.out.println("----------------------------------");
+	            System.out.println("ID: " + viaje.getIdViaje());
+	            System.out.println("Origen: " + viaje.getCiudadOrigen());
+	            System.out.println("Destino: " + viaje.getCiudadDestino());
+	            System.out.println("Fecha y hora: " + viaje.getFechaHora());
+	            System.out.println("Plazas disponibles: " + viaje.getPlazasDisponibles());
+
+	            Conductor conductor = viaje.getConductor();
+	            if (conductor != null) {
+	                System.out.println("Conductor: " + conductor.getNombreConductor() + " (" + conductor.getVehiculo() + ")");
+	            } else {
+	                System.out.println("Conductor: no asignado");
+	            }
+	        }
+	        System.out.println("----------------------------------");
+
+	    } catch (Exception e) {
+	        System.out.println("Error al listar los viajes: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	}
+
+
+	private static void cancelarReserva(Scanner teclado, Session session) {
+		teclado.nextLine(); // limpiar salto pendiente
+        try {
+            System.out.println("Introduce el ID de la reserva que deseas cancelar:");
+            int idReserva = teclado.nextInt();
+
+            if (idReserva == 0) {
+                System.out.println("El ID no puede ser cero.");
+                return;
+            }
+
+            Reserva reserva = session.get(Reserva.class, idReserva);
+
+            if (reserva == null) {
+                System.out.println("No existe ninguna reserva con ese ID.");
+                return;
+            }
+
+            Transaction tx = session.beginTransaction();
+            ReservaService reservaService = new ReservaService(session);
+			reservaService.eliminarReserva(idReserva);
+            tx.commit();
+
+            System.out.println("Reserva cancelada correctamente.");
+
+        } catch (NumberFormatException e) {
+            System.out.println("El ID debe ser un número válido. No puede cotener letras");
+        } catch (Exception e) {
+            System.err.println("Error al cancelar la reserva: " + e.getMessage());
+        }
+    }
 }
